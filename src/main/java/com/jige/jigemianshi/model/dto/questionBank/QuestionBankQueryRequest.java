@@ -1,4 +1,4 @@
-package com.jige.jigemianshi.model.dto.question;
+package com.jige.jigemianshi.model.dto.questionBank;
 
 import com.jige.jigemianshi.common.PageRequest;
 import lombok.Data;

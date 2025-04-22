@@ -68,8 +68,6 @@ public class QuestionBankVO implements Serializable {
         }
         QuestionBank questionBank = new QuestionBank();
         BeanUtils.copyProperties(questionBankVO, questionBank);
-        List<String> tagList = questionBankVO.getTagList();
-        questionBank.setTags(JSONUtil.toJsonStr(tagList));
         return questionBank;
     }
 
@@ -85,7 +83,6 @@ public class QuestionBankVO implements Serializable {
         }
         QuestionBankVO questionBankVO = new QuestionBankVO();
         BeanUtils.copyProperties(questionBank, questionBankVO);
-        questionBankVO.setTagList(JSONUtil.toList(questionBank.getTags(), String.class));
         return questionBankVO;
     }
 }

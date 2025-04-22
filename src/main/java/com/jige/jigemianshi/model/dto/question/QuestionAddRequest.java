@@ -3,6 +3,7 @@ package com.jige.jigemianshi.model.dto.question;
 import lombok.Data;
 
 import java.io.Serializable;
+import java.util.List;
 
 @Data
 public class QuestionAddRequest implements Serializable {

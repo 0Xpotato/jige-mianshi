@@ -1,35 +1,19 @@
 package com.jige.jigemianshi.service.impl;
 
-import cn.hutool.core.collection.CollUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.jige.jigemianshi.common.ErrorCode;
-import com.jige.jigemianshi.constant.CommonConstant;
-import com.jige.jigemianshi.exception.ThrowUtils;
 import com.jige.jigemianshi.mapper.QuestionBankMapper;
 import com.jige.jigemianshi.model.dto.questionBank.QuestionBankQueryRequest;
 import com.jige.jigemianshi.model.entity.QuestionBank;
-import com.jige.jigemianshi.model.entity.QuestionBankFavour;
-import com.jige.jigemianshi.model.entity.QuestionBankThumb;
-import com.jige.jigemianshi.model.entity.User;
 import com.jige.jigemianshi.model.vo.QuestionBankVO;
-import com.jige.jigemianshi.model.vo.UserVO;
 import com.jige.jigemianshi.service.QuestionBankService;
 import com.jige.jigemianshi.service.UserService;
-import com.jige.jigemianshi.utils.SqlUtils;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.ObjectUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 /**
  * 题库服务实现
@@ -42,12 +26,32 @@ public class QuestionBankServiceImpl extends ServiceImpl<QuestionBankMapper, Que
     @Resource
     private UserService userService;
 
+    @Override
+    public void validQuestionBank(QuestionBank questionBank, boolean add) {
+
+    }
+
+    @Override
+    public QueryWrapper<QuestionBank> getQueryWrapper(QuestionBankQueryRequest questionBankQueryRequest) {
+        return null;
+    }
+
+    @Override
+    public QuestionBankVO getQuestionBankVO(QuestionBank questionBank, HttpServletRequest request) {
+        return null;
+    }
+
+    @Override
+    public Page<QuestionBankVO> getQuestionBankVOPage(Page<QuestionBank> questionBankPage, HttpServletRequest request) {
+        return null;
+    }
+
     /**
      * 校验数据
      *
      * @param questionBank
      * @param add      对创建的数据进行校验
-     */
+     *//*
     @Override
     public void validQuestionBank(QuestionBank questionBank, boolean add) {
         ThrowUtils.throwIf(questionBank == null, ErrorCode.PARAMS_ERROR);
@@ -65,12 +69,12 @@ public class QuestionBankServiceImpl extends ServiceImpl<QuestionBankMapper, Que
         }
     }
 
-    /**
+    *//**
      * 获取查询条件
      *
      * @param questionBankQueryRequest
      * @return
-     */
+     *//*
     @Override
     public QueryWrapper<QuestionBank> getQueryWrapper(QuestionBankQueryRequest questionBankQueryRequest) {
         QueryWrapper<QuestionBank> queryWrapper = new QueryWrapper<>();
@@ -113,13 +117,13 @@ public class QuestionBankServiceImpl extends ServiceImpl<QuestionBankMapper, Que
         return queryWrapper;
     }
 
-    /**
+    *//**
      * 获取题库封装
      *
      * @param questionBank
      * @param request
      * @return
-     */
+     *//*
     @Override
     public QuestionBankVO getQuestionBankVO(QuestionBank questionBank, HttpServletRequest request) {
         // 对象转封装类
@@ -157,13 +161,13 @@ public class QuestionBankServiceImpl extends ServiceImpl<QuestionBankMapper, Que
         return questionBankVO;
     }
 
-    /**
+    *//**
      * 分页获取题库封装
      *
      * @param questionBankPage
      * @param request
      * @return
-     */
+     *//*
     @Override
     public Page<QuestionBankVO> getQuestionBankVOPage(Page<QuestionBank> questionBankPage, HttpServletRequest request) {
         List<QuestionBank> questionBankList = questionBankPage.getRecords();
@@ -218,5 +222,5 @@ public class QuestionBankServiceImpl extends ServiceImpl<QuestionBankMapper, Que
         questionBankVOPage.setRecords(questionBankVOList);
         return questionBankVOPage;
     }
-
+*/
 }
