@@ -1,4 +1,4 @@
-package com.jige.jigemianshi.model.dto.questionBank;
+package com.jige.jigemianshi.model.dto.questionBankQuestion;
 
 import lombok.Data;
 
@@ -10,27 +10,23 @@ import java.util.List;
  *
  */
 @Data
-public class QuestionBankUpdateRequest implements Serializable {
+public class QuestionBankQuestionUpdateRequest implements Serializable {
 
+    private static final long serialVersionUID = 1L;
     /**
      * id
      */
     private Long id;
-
     /**
      * 标题
      */
     private String title;
-
     /**
      * 内容
      */
     private String content;
-
     /**
      * 标签列表
      */
     private List<String> tags;
-
-    private static final long serialVersionUID = 1L;
 }

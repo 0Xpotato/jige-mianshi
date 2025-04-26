@@ -1,4 +1,4 @@
-package com.jige.jigemianshi.model.dto.questionBank;
+package com.jige.jigemianshi.model.dto.questionBankQuestion;
 
 import com.jige.jigemianshi.common.PageRequest;
 import lombok.Data;
@@ -13,42 +13,35 @@ import java.util.List;
  */
 @EqualsAndHashCode(callSuper = true)
 @Data
-public class QuestionBankQueryRequest extends PageRequest implements Serializable {
+public class QuestionBankQuestionQueryRequest extends PageRequest implements Serializable {
 
+    private static final long serialVersionUID = 1L;
     /**
      * id
      */
     private Long id;
-
     /**
      * id
      */
     private Long notId;
-
     /**
      * 搜索词
      */
     private String searchText;
-
     /**
      * 标题
      */
     private String title;
-
     /**
      * 内容
      */
     private String content;
-
     /**
      * 标签列表
      */
     private List<String> tags;
-
     /**
      * 创建用户 id
      */
     private Long userId;
-
-    private static final long serialVersionUID = 1L;
 }

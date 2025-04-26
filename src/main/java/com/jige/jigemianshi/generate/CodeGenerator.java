@@ -29,9 +29,9 @@ public class CodeGenerator {
         // 指定生成参数
         String packageName = "com.jige.jigemianshi";
         String dataName = "题库";
-        String dataKey = "questionBank";
+        String dataKey = "questionBankQuestion";
         // 注意，这里需要保持首字母大写
-        String upperDataKey = "QuestionBank";
+        String upperDataKey = "QuestionBankQuestion";
 
         // 封装生成参数
         Map<String, Object> dataModel = new HashMap<>();

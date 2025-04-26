@@ -82,7 +82,7 @@ buildNumber.properties
 .idea/**/shelf
 
 # Custom
-application-test.yml
+application-dev.yml
 application-prod.yml
 
 # Generated files

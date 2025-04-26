@@ -1,22 +1,124 @@
 package com.jige.jigemianshi.service.impl;
 
+import cn.hutool.core.collection.CollUtil;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.jige.jigemianshi.model.entity.QuestionBankQuestion;
-import com.jige.jigemianshi.service.QuestionBankQuestionService;
+import com.jige.jigemianshi.common.ErrorCode;
+import com.jige.jigemianshi.constant.CommonConstant;
+import com.jige.jigemianshi.exception.ThrowUtils;
 import com.jige.jigemianshi.mapper.QuestionBankQuestionMapper;
+import com.jige.jigemianshi.model.dto.questionBankQuestion.QuestionBankQuestionQueryRequest;
+import com.jige.jigemianshi.model.entity.QuestionBankQuestion;
+import com.jige.jigemianshi.model.vo.QuestionBankQuestionVO;
+import com.jige.jigemianshi.service.QuestionBankQuestionService;
+import com.jige.jigemianshi.service.UserService;
+import com.jige.jigemianshi.utils.SqlUtils;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.ObjectUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
+import java.util.List;
+
 /**
-* @author Administrator
-* @description 针对表【question_bank_question(题库题目)】的数据库操作Service实现
-* @createDate 2025-04-22 23:52:45
-*/
+ * 题库服务实现
+ *
+ */
 @Service
-public class QuestionBankQuestionServiceImpl extends ServiceImpl<QuestionBankQuestionMapper, QuestionBankQuestion>
-    implements QuestionBankQuestionService{
+@Slf4j
+public class QuestionBankQuestionServiceImpl extends ServiceImpl<QuestionBankQuestionMapper, QuestionBankQuestion> implements QuestionBankQuestionService {
+
+    @Resource
+    private UserService userService;
+
+/*    *//**
+     * 校验数据
+     *
+     * @param questionBankQuestion
+     * @param add      对创建的数据进行校验
+     *//*
+    @Override
+    public void validQuestionBankQuestion(QuestionBankQuestion questionBankQuestion, boolean add) {
+        ThrowUtils.throwIf(questionBankQuestion == null, ErrorCode.PARAMS_ERROR);
+        // todo 从对象中取值
+        String title = questionBankQuestion.getTitle();
+        // 创建数据时，参数不能为空
+        if (add) {
+            // todo 补充校验规则
+            ThrowUtils.throwIf(StringUtils.isBlank(title), ErrorCode.PARAMS_ERROR);
+        }
+        // 修改数据时，有参数则校验
+        // todo 补充校验规则
+        if (StringUtils.isNotBlank(title)) {
+            ThrowUtils.throwIf(title.length() > 80, ErrorCode.PARAMS_ERROR, "标题过长");
+        }
+    }*/
+
+    @Override
+    public void validQuestionBankQuestion(QuestionBankQuestion questionBankQuestion, boolean add) {
+
+    }
+
+    /**
+     * 获取查询条件
+     *
+     * @param questionBankQuestionQueryRequest
+     * @return
+     */
+    @Override
+    public QueryWrapper<QuestionBankQuestion> getQueryWrapper(QuestionBankQuestionQueryRequest questionBankQuestionQueryRequest) {
+        QueryWrapper<QuestionBankQuestion> queryWrapper = new QueryWrapper<>();
+        if (questionBankQuestionQueryRequest == null) {
+            return queryWrapper;
+        }
+        // todo 从对象中取值
+        Long id = questionBankQuestionQueryRequest.getId();
+        Long notId = questionBankQuestionQueryRequest.getNotId();
+        String title = questionBankQuestionQueryRequest.getTitle();
+        String content = questionBankQuestionQueryRequest.getContent();
+        String searchText = questionBankQuestionQueryRequest.getSearchText();
+        String sortField = questionBankQuestionQueryRequest.getSortField();
+        String sortOrder = questionBankQuestionQueryRequest.getSortOrder();
+        List<String> tagList = questionBankQuestionQueryRequest.getTags();
+        Long userId = questionBankQuestionQueryRequest.getUserId();
+        // todo 补充需要的查询条件
+        // 从多字段中搜索
+        if (StringUtils.isNotBlank(searchText)) {
+            // 需要拼接查询条件
+            queryWrapper.and(qw -> qw.like("title", searchText).or().like("content", searchText));
+        }
+        // 模糊查询
+        queryWrapper.like(StringUtils.isNotBlank(title), "title", title);
+        queryWrapper.like(StringUtils.isNotBlank(content), "content", content);
+        // JSON 数组查询
+        if (CollUtil.isNotEmpty(tagList)) {
+            for (String tag : tagList) {
+                queryWrapper.like("tags", "\"" + tag + "\"");
+            }
+        }
+        // 精确查询
+        queryWrapper.ne(ObjectUtils.isNotEmpty(notId), "id", notId);
+        queryWrapper.eq(ObjectUtils.isNotEmpty(id), "id", id);
+        queryWrapper.eq(ObjectUtils.isNotEmpty(userId), "userId", userId);
+        // 排序规则
+        queryWrapper.orderBy(SqlUtils.validSortField(sortField),
+                sortOrder.equals(CommonConstant.SORT_ORDER_ASC),
+                sortField);
+        return queryWrapper;
+    }
+
+    @Override
+    public QuestionBankQuestionVO getQuestionBankQuestionVO(QuestionBankQuestion questionBankQuestion, HttpServletRequest request) {
+        return null;
+    }
+
+    @Override
+    public Page<QuestionBankQuestionVO> getQuestionBankQuestionVOPage(Page<QuestionBankQuestion> questionBankQuestionPage, HttpServletRequest request) {
+        return null;
+    }
+
 
 }
-
-
-
-
