@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.jige.jigemianshi.model.dto.questionBankQuestion.QuestionBankQuestionQueryRequest;
+import com.jige.jigemianshi.model.dto.questionBankQuestion.QuestionBankQuestionRemoveRequest;
 import com.jige.jigemianshi.model.entity.QuestionBankQuestion;
 import com.jige.jigemianshi.model.vo.QuestionBankQuestionVO;
 
@@ -48,4 +49,11 @@ public interface QuestionBankQuestionService extends IService<QuestionBankQuesti
      * @return
      */
     Page<QuestionBankQuestionVO> getQuestionBankQuestionVOPage(Page<QuestionBankQuestion> questionBankQuestionPage, HttpServletRequest request);
+
+    /**
+     * 删除
+     * @param questionBankQuestionRemoveRequest
+     * @return
+     */
+    boolean removeById(QuestionBankQuestionRemoveRequest questionBankQuestionRemoveRequest);
 }

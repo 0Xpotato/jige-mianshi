@@ -3,18 +3,14 @@ package com.jige.jigemianshi.model.dto.questionBankQuestion;
 import lombok.Data;
 
 import java.io.Serializable;
+import java.util.List;
 
 /**
- * 更新题库题目关联请求
+ * 批量创建题库题目关联请求
  *
  */
 @Data
-public class QuestionBankQuestionUpdateRequest implements Serializable {
-
-    /**
-     * id
-     */
-    private Long id;
+public class QuestionBankQuestionBatchAddRequest implements Serializable {
 
     private static final long serialVersionUID = 1L;
     /**
@@ -22,7 +18,7 @@ public class QuestionBankQuestionUpdateRequest implements Serializable {
      */
     private Long questionBankId;
     /**
-     * 题目 id
+     * 题目 id 列表
      */
-    private Long questionId;
+    private List<Long> questionIdList;
 }

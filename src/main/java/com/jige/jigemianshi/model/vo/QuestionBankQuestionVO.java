@@ -1,6 +1,5 @@
 package com.jige.jigemianshi.model.vo;
 
-import cn.hutool.json.JSONUtil;
 import com.jige.jigemianshi.model.entity.QuestionBankQuestion;
 import lombok.Data;
 import org.springframework.beans.BeanUtils;

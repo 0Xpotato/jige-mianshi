@@ -1,47 +1,41 @@
 package com.jige.jigemianshi.model.dto.questionBankQuestion;
 
-import com.jige.jigemianshi.common.PageRequest;
+import com.yupi.mianshiya.common.PageRequest;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import java.io.Serializable;
-import java.util.List;
 
 /**
- * 查询题库请求
+ * 查询题库题目关联请求
  *
  */
 @EqualsAndHashCode(callSuper = true)
 @Data
 public class QuestionBankQuestionQueryRequest extends PageRequest implements Serializable {
 
-    private static final long serialVersionUID = 1L;
     /**
      * id
      */
     private Long id;
+
     /**
      * id
      */
     private Long notId;
+
+    private static final long serialVersionUID = 1L;
     /**
-     * 搜索词
+     * 题库 id
      */
-    private String searchText;
-    /**
-     * 标题
-     */
-    private String title;
-    /**
-     * 内容
-     */
-    private String content;
-    /**
-     * 标签列表
-     */
-    private List<String> tags;
+    private Long questionBankId;
+
     /**
      * 创建用户 id
      */
     private Long userId;
+    /**
+     * 题目 id
+     */
+    private Long questionId;
 }

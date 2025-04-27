@@ -23,7 +23,6 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -31,7 +30,6 @@ import java.util.stream.Collectors;
 
 /**
  * 题库服务实现
- *
  */
 @Service
 @Slf4j
@@ -44,7 +42,7 @@ public class QuestionBankServiceImpl extends ServiceImpl<QuestionBankMapper, Que
      * 校验数据
      *
      * @param questionBank
-     * @param add      对创建的数据进行校验
+     * @param add          对创建的数据进行校验
      */
     @Override
     public void validQuestionBank(QuestionBank questionBank, boolean add) {
@@ -93,7 +91,7 @@ public class QuestionBankServiceImpl extends ServiceImpl<QuestionBankMapper, Que
         }
         // 模糊查询
         queryWrapper.like(StringUtils.isNotBlank(title), "title", title);
-        queryWrapper.like(StringUtils.isNotBlank(content), "content", content);
+        queryWrapper.like(StringUtils.isNotBlank(content), "description", content);
         // JSON 数组查询
         if (CollUtil.isNotEmpty(tagList)) {
             for (String tag : tagList) {
@@ -111,29 +109,30 @@ public class QuestionBankServiceImpl extends ServiceImpl<QuestionBankMapper, Que
         return queryWrapper;
     }
 
-    @Override
-    public QuestionBankVO getQuestionBankVO(QuestionBank questionBank, HttpServletRequest request) {
-        return null;
-    }
 
-    @Override
-    public Page<QuestionBankVO> getQuestionBankVOPage(Page<QuestionBank> questionBankPage, HttpServletRequest request) {
-        return null;
-    }
-
-    /*    *//**
+    /**
      * 获取题库封装
      *
      * @param questionBank
      * @param request
      * @return
-     *//*
+     */
     @Override
     public QuestionBankVO getQuestionBankVO(QuestionBank questionBank, HttpServletRequest request) {
+        User loginUser = userService.getLoginUser(request);
+        ThrowUtils.throwIf(loginUser==null, ErrorCode.NOT_LOGIN_ERROR);
         // 对象转封装类
         QuestionBankVO questionBankVO = QuestionBankVO.objToVo(questionBank);
 
-        // todo 可以根据需要为封装对象补充值，不需要的内容可以删除
+        //关联查询用户信息
+        Long userId = questionBank.getUserId();
+        User user = null;
+        if (userId != null && userId > 0) {
+            user = userService.getById(userId);
+        }
+        UserVO userVO = userService.getUserVO(user);
+        questionBankVO.setUser(userVO);
+        /*// todo 可以根据需要为封装对象补充值，不需要的内容可以删除
         // region 可选
         // 1. 关联查询用户信息
         Long userId = questionBank.getUserId();
@@ -160,20 +159,22 @@ public class QuestionBankServiceImpl extends ServiceImpl<QuestionBankMapper, Que
             QuestionBankFavour questionBankFavour = questionBankFavourMapper.selectOne(questionBankFavourQueryWrapper);
             questionBankVO.setHasFavour(questionBankFavour != null);
         }
-        // endregion
+        // endregion*/
 
         return questionBankVO;
-    }*/
+    }
 
     /**
-     * 分页获取题库封装
+     * 分页获取封装类
      *
      * @param questionBankPage
      * @param request
      * @return
-     *//*
+     */
     @Override
     public Page<QuestionBankVO> getQuestionBankVOPage(Page<QuestionBank> questionBankPage, HttpServletRequest request) {
+        User loginUser = userService.getLoginUser(request);
+        ThrowUtils.throwIf(loginUser==null, ErrorCode.NOT_LOGIN_ERROR);
         List<QuestionBank> questionBankList = questionBankPage.getRecords();
         Page<QuestionBankVO> questionBankVOPage = new Page<>(questionBankPage.getCurrent(), questionBankPage.getSize(), questionBankPage.getTotal());
         if (CollUtil.isEmpty(questionBankList)) {
@@ -190,26 +191,6 @@ public class QuestionBankServiceImpl extends ServiceImpl<QuestionBankMapper, Que
         Set<Long> userIdSet = questionBankList.stream().map(QuestionBank::getUserId).collect(Collectors.toSet());
         Map<Long, List<User>> userIdUserListMap = userService.listByIds(userIdSet).stream()
                 .collect(Collectors.groupingBy(User::getId));
-        // 2. 已登录，获取用户点赞、收藏状态
-        Map<Long, Boolean> questionBankIdHasThumbMap = new HashMap<>();
-        Map<Long, Boolean> questionBankIdHasFavourMap = new HashMap<>();
-        User loginUser = userService.getLoginUserPermitNull(request);
-        if (loginUser != null) {
-            Set<Long> questionBankIdSet = questionBankList.stream().map(QuestionBank::getId).collect(Collectors.toSet());
-            loginUser = userService.getLoginUser(request);
-            // 获取点赞
-            QueryWrapper<QuestionBankThumb> questionBankThumbQueryWrapper = new QueryWrapper<>();
-            questionBankThumbQueryWrapper.in("questionBankId", questionBankIdSet);
-            questionBankThumbQueryWrapper.eq("userId", loginUser.getId());
-            List<QuestionBankThumb> questionBankQuestionBankThumbList = questionBankThumbMapper.selectList(questionBankThumbQueryWrapper);
-            questionBankQuestionBankThumbList.forEach(questionBankQuestionBankThumb -> questionBankIdHasThumbMap.put(questionBankQuestionBankThumb.getQuestionBankId(), true));
-            // 获取收藏
-            QueryWrapper<QuestionBankFavour> questionBankFavourQueryWrapper = new QueryWrapper<>();
-            questionBankFavourQueryWrapper.in("questionBankId", questionBankIdSet);
-            questionBankFavourQueryWrapper.eq("userId", loginUser.getId());
-            List<QuestionBankFavour> questionBankFavourList = questionBankFavourMapper.selectList(questionBankFavourQueryWrapper);
-            questionBankFavourList.forEach(questionBankFavour -> questionBankIdHasFavourMap.put(questionBankFavour.getQuestionBankId(), true));
-        }
         // 填充信息
         questionBankVOList.forEach(questionBankVO -> {
             Long userId = questionBankVO.getUserId();
@@ -218,13 +199,12 @@ public class QuestionBankServiceImpl extends ServiceImpl<QuestionBankMapper, Que
                 user = userIdUserListMap.get(userId).get(0);
             }
             questionBankVO.setUser(userService.getUserVO(user));
-            questionBankVO.setHasThumb(questionBankIdHasThumbMap.getOrDefault(questionBankVO.getId(), false));
-            questionBankVO.setHasFavour(questionBankIdHasFavourMap.getOrDefault(questionBankVO.getId(), false));
         });
         // endregion
 
         questionBankVOPage.setRecords(questionBankVOList);
         return questionBankVOPage;
-    }*/
+    }
+
 
 }

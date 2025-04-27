@@ -1,7 +1,9 @@
 package com.jige.jigemianshi.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.jige.jigemianshi.common.ErrorCode;
@@ -10,9 +12,11 @@ import com.jige.jigemianshi.exception.ThrowUtils;
 import com.jige.jigemianshi.mapper.QuestionMapper;
 import com.jige.jigemianshi.model.dto.question.QuestionQueryRequest;
 import com.jige.jigemianshi.model.entity.Question;
+import com.jige.jigemianshi.model.entity.QuestionBankQuestion;
 import com.jige.jigemianshi.model.entity.User;
 import com.jige.jigemianshi.model.vo.QuestionVO;
 import com.jige.jigemianshi.model.vo.UserVO;
+import com.jige.jigemianshi.service.QuestionBankQuestionService;
 import com.jige.jigemianshi.service.QuestionService;
 import com.jige.jigemianshi.service.UserService;
 import com.jige.jigemianshi.utils.SqlUtils;
@@ -31,7 +35,6 @@ import java.util.stream.Collectors;
 
 /**
  * 题库服务实现
- *
  */
 @Service
 @Slf4j
@@ -39,6 +42,9 @@ public class QuestionServiceImpl extends ServiceImpl<QuestionMapper, Question> i
 
     @Resource
     private UserService userService;
+
+    @Resource
+    private QuestionBankQuestionService questionBankQuestionService;
 
     /**
      * 校验数据
@@ -113,12 +119,82 @@ public class QuestionServiceImpl extends ServiceImpl<QuestionMapper, Question> i
 
     @Override
     public QuestionVO getQuestionVO(Question question, HttpServletRequest request) {
-        return null;
+        QuestionVO questionVO = QuestionVO.objToVo(question);
+        Long userId = question.getUserId();
+        User user = null;
+        //关联查询用户
+        if (userId != null && userId > 0) {
+            user = userService.getById(userId);
+        }
+        UserVO userVO = userService.getUserVO(user);
+        questionVO.setUser(userVO);
+        return questionVO;
     }
 
     @Override
     public Page<QuestionVO> getQuestionVOPage(Page<Question> questionPage, HttpServletRequest request) {
-        return null;
+        List<Question> questionBankList = questionPage.getRecords();
+        Page<QuestionVO> questionBankVOPage = new Page<>(questionPage.getCurrent(), questionPage.getSize(), questionPage.getTotal());
+        if (CollUtil.isEmpty(questionBankList)) {
+            return questionBankVOPage;
+        }
+        // 对象列表 => 封装对象列表
+        List<QuestionVO> questionBankVOList = questionBankList.stream().map(Question -> {
+            return QuestionVO.objToVo(Question);
+        }).collect(Collectors.toList());
+
+        // todo 可以根据需要为封装对象补充值，不需要的内容可以删除
+        // region 可选
+        // 1. 关联查询用户信息
+        Set<Long> userIdSet = questionBankList.stream().map(Question::getUserId).collect(Collectors.toSet());
+        Map<Long, List<User>> userIdUserListMap = userService.listByIds(userIdSet).stream()
+                .collect(Collectors.groupingBy(User::getId));
+        // 填充信息
+        questionBankVOList.forEach(QuestionVO -> {
+            Long userId = QuestionVO.getUserId();
+            User user = null;
+            if (userIdUserListMap.containsKey(userId)) {
+                user = userIdUserListMap.get(userId).get(0);
+            }
+            QuestionVO.setUser(userService.getUserVO(user));
+        });
+        // endregion
+
+        questionBankVOPage.setRecords(questionBankVOList);
+        return questionBankVOPage;
+    }
+
+    /**
+     * 分页查询题目封装
+     * @param questionQueryRequest
+     * @return
+     */
+    @Override
+    public Page<Question> listQuestionByPage(QuestionQueryRequest questionQueryRequest) {
+        int current = questionQueryRequest.getCurrent();
+        int pageSize = questionQueryRequest.getPageSize();
+        // 题目表的查询条件
+        QueryWrapper<Question> queryWrapper = this.getQueryWrapper(questionQueryRequest);
+        // 根据题库查询题目列表接口
+        Long questionBankId = questionQueryRequest.getQuestionBankId();
+        if (questionBankId != null) {
+            // 查询题库内的题目 id
+            LambdaQueryWrapper<QuestionBankQuestion> lambdaQueryWrapper = Wrappers.lambdaQuery(QuestionBankQuestion.class)
+                    .select(QuestionBankQuestion::getQuestionId)
+                    .eq(QuestionBankQuestion::getQuestionBankId, questionBankId);
+            List<QuestionBankQuestion> questionList = questionBankQuestionService.list(lambdaQueryWrapper);
+            if (CollUtil.isNotEmpty(questionList)) {
+                // 取出题目 id 集合
+                Set<Long> questionIdSet = questionList.stream()
+                        .map(QuestionBankQuestion::getQuestionId)
+                        .collect(Collectors.toSet());
+                // 复用原有题目表的查询条件
+                queryWrapper.in("id", questionIdSet);
+            }
+        }
+        //  查询数据库
+        Page<Question> page = this.page(new Page<>(current, pageSize), queryWrapper);
+        return page;
     }
 
     /*    *//**
@@ -165,7 +241,7 @@ public class QuestionServiceImpl extends ServiceImpl<QuestionMapper, Question> i
         return questionVO;
     }*/
 
-/*    *//**
+    /*    *//**
      * 分页获取题库封装
      *
      * @param questionPage

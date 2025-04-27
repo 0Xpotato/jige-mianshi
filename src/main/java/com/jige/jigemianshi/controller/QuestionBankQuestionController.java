@@ -1,5 +1,8 @@
 package com.jige.jigemianshi.controller;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.jige.jigemianshi.annotation.AuthCheck;
 import com.jige.jigemianshi.common.BaseResponse;
@@ -11,13 +14,16 @@ import com.jige.jigemianshi.exception.BusinessException;
 import com.jige.jigemianshi.exception.ThrowUtils;
 import com.jige.jigemianshi.model.dto.questionBankQuestion.QuestionBankQuestionAddRequest;
 import com.jige.jigemianshi.model.dto.questionBankQuestion.QuestionBankQuestionQueryRequest;
+import com.jige.jigemianshi.model.dto.questionBankQuestion.QuestionBankQuestionRemoveRequest;
 import com.jige.jigemianshi.model.dto.questionBankQuestion.QuestionBankQuestionUpdateRequest;
 import com.jige.jigemianshi.model.entity.QuestionBankQuestion;
 import com.jige.jigemianshi.model.entity.User;
 import com.jige.jigemianshi.model.vo.QuestionBankQuestionVO;
+import com.jige.jigemianshi.model.vo.QuestionBankVO;
 import com.jige.jigemianshi.service.QuestionBankQuestionService;
 import com.jige.jigemianshi.service.UserService;
 import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.BeanUtils;
 import org.springframework.web.bind.annotation.*;
 
@@ -26,7 +32,6 @@ import javax.servlet.http.HttpServletRequest;
 
 /**
  * 题库接口
- *
  */
 @RestController
 @RequestMapping("/questionBankQuestion")
@@ -49,6 +54,7 @@ public class QuestionBankQuestionController {
      * @return
      */
     @PostMapping("/add")
+    @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
     public BaseResponse<Long> addQuestionBankQuestion(@RequestBody QuestionBankQuestionAddRequest questionBankQuestionAddRequest, HttpServletRequest request) {
         ThrowUtils.throwIf(questionBankQuestionAddRequest == null, ErrorCode.PARAMS_ERROR);
         // todo 在此处将实体类和 DTO 进行转换
@@ -56,6 +62,14 @@ public class QuestionBankQuestionController {
         BeanUtils.copyProperties(questionBankQuestionAddRequest, questionBankQuestion);
         // 数据校验
         questionBankQuestionService.validQuestionBankQuestion(questionBankQuestion, true);
+        // 查询数据库中是否存在
+        Long questionId = questionBankQuestionAddRequest.getQuestionId();
+        Long questionBankId = questionBankQuestionAddRequest.getQuestionBankId();
+        LambdaQueryWrapper<QuestionBankQuestion> lambdaQueryWrapper = new LambdaQueryWrapper<>(QuestionBankQuestion.class)
+                .eq(QuestionBankQuestion::getQuestionId, questionId)
+                .eq(QuestionBankQuestion::getQuestionBankId, questionBankId);
+        QuestionBankQuestion entity = questionBankQuestionService.getOne(lambdaQueryWrapper);
+        ThrowUtils.throwIf(entity!=null ,ErrorCode.OPERATION_ERROR,"不可重复添加");
         // todo 填充默认值
         User loginUser = userService.getLoginUser(request);
         questionBankQuestion.setUserId(loginUser.getId());
@@ -163,7 +177,7 @@ public class QuestionBankQuestionController {
      */
     @PostMapping("/list/page/vo")
     public BaseResponse<Page<QuestionBankQuestionVO>> listQuestionBankQuestionVOByPage(@RequestBody QuestionBankQuestionQueryRequest questionBankQuestionQueryRequest,
-                                                               HttpServletRequest request) {
+                                                                                       HttpServletRequest request) {
         long current = questionBankQuestionQueryRequest.getCurrent();
         long size = questionBankQuestionQueryRequest.getPageSize();
         // 限制爬虫
@@ -172,8 +186,7 @@ public class QuestionBankQuestionController {
         Page<QuestionBankQuestion> questionBankQuestionPage = questionBankQuestionService.page(new Page<>(current, size),
                 questionBankQuestionService.getQueryWrapper(questionBankQuestionQueryRequest));
         // 获取封装类
-        return ResultUtils.success(questionBankQuestionService.getQuestionBankQuestionVOPage(questionBankQuestionPage, request));
-    }
+        return ResultUtils.success(questionBankQuestionService.getQuestionBankQuestionVOPage(questionBankQuestionPage, request));    }
 
     /**
      * 分页获取当前登录用户创建的题库列表
@@ -184,7 +197,7 @@ public class QuestionBankQuestionController {
      */
     @PostMapping("/my/list/page/vo")
     public BaseResponse<Page<QuestionBankQuestionVO>> listMyQuestionBankQuestionVOByPage(@RequestBody QuestionBankQuestionQueryRequest questionBankQuestionQueryRequest,
-                                                                 HttpServletRequest request) {
+                                                                                         HttpServletRequest request) {
         ThrowUtils.throwIf(questionBankQuestionQueryRequest == null, ErrorCode.PARAMS_ERROR);
         // 补充查询条件，只查询当前登录用户的数据
         User loginUser = userService.getLoginUser(request);
@@ -200,6 +213,18 @@ public class QuestionBankQuestionController {
         return ResultUtils.success(questionBankQuestionService.getQuestionBankQuestionVOPage(questionBankQuestionPage, request));
     }
 
+    @PostMapping("/remove")
+    @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
+    public BaseResponse<Boolean> removeQuestionBankQuestion(@RequestBody QuestionBankQuestionRemoveRequest questionBankQuestionRemoveRequest) {
+        //  参数校验
+        if (questionBankQuestionRemoveRequest == null) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        //  操作数据库
+        return ResultUtils.success(questionBankQuestionService.removeById(questionBankQuestionRemoveRequest));
+    }
 
     // endregion
+
+
 }

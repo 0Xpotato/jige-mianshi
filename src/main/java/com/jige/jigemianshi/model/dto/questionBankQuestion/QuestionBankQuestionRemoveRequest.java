@@ -5,17 +5,10 @@ import lombok.Data;
 import java.io.Serializable;
 
 /**
- * 更新题库题目关联请求
- *
+ * 移除题目题库关系请求
  */
 @Data
-public class QuestionBankQuestionUpdateRequest implements Serializable {
-
-    /**
-     * id
-     */
-    private Long id;
-
+public class QuestionBankQuestionRemoveRequest implements Serializable {
     private static final long serialVersionUID = 1L;
     /**
      * 题库 id

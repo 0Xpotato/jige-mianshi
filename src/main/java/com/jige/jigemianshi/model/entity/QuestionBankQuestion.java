@@ -20,7 +20,7 @@ public class QuestionBankQuestion implements Serializable {
     /**
      * id
      */
-    @TableId(type = IdType.AUTO)
+    @TableId(type = IdType.ASSIGN_ID)
     private Long id;
     /**
      * 题库 id

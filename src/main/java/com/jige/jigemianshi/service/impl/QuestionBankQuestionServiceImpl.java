@@ -1,6 +1,7 @@
 package com.jige.jigemianshi.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -9,14 +10,20 @@ import com.jige.jigemianshi.constant.CommonConstant;
 import com.jige.jigemianshi.exception.ThrowUtils;
 import com.jige.jigemianshi.mapper.QuestionBankQuestionMapper;
 import com.jige.jigemianshi.model.dto.questionBankQuestion.QuestionBankQuestionQueryRequest;
+import com.jige.jigemianshi.model.dto.questionBankQuestion.QuestionBankQuestionRemoveRequest;
+import com.jige.jigemianshi.model.entity.Question;
+import com.jige.jigemianshi.model.entity.QuestionBank;
 import com.jige.jigemianshi.model.entity.QuestionBankQuestion;
 import com.jige.jigemianshi.model.vo.QuestionBankQuestionVO;
 import com.jige.jigemianshi.service.QuestionBankQuestionService;
+import com.jige.jigemianshi.service.QuestionBankService;
+import com.jige.jigemianshi.service.QuestionService;
 import com.jige.jigemianshi.service.UserService;
 import com.jige.jigemianshi.utils.SqlUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -34,32 +41,33 @@ public class QuestionBankQuestionServiceImpl extends ServiceImpl<QuestionBankQue
     @Resource
     private UserService userService;
 
-/*    *//**
+    @Lazy
+    @Resource
+    private QuestionService questionService;
+
+    @Resource
+    private QuestionBankService questionBankService;
+
+    /**
      * 校验数据
      *
      * @param questionBankQuestion
      * @param add      对创建的数据进行校验
-     *//*
+     */
     @Override
     public void validQuestionBankQuestion(QuestionBankQuestion questionBankQuestion, boolean add) {
         ThrowUtils.throwIf(questionBankQuestion == null, ErrorCode.PARAMS_ERROR);
-        // todo 从对象中取值
-        String title = questionBankQuestion.getTitle();
-        // 创建数据时，参数不能为空
-        if (add) {
-            // todo 补充校验规则
-            ThrowUtils.throwIf(StringUtils.isBlank(title), ErrorCode.PARAMS_ERROR);
+        Long questionId = questionBankQuestion.getQuestionId();
+        Long questionBankId = questionBankQuestion.getQuestionBankId();
+        // 题目和题库必须存在
+        if (questionId!=null){
+            Question question = questionService.getById(questionId);
+            ThrowUtils.throwIf(question==null,ErrorCode.NOT_FOUND_ERROR,"题目不存在");
         }
-        // 修改数据时，有参数则校验
-        // todo 补充校验规则
-        if (StringUtils.isNotBlank(title)) {
-            ThrowUtils.throwIf(title.length() > 80, ErrorCode.PARAMS_ERROR, "标题过长");
+        if (questionBankId!=null){
+            QuestionBank questionBank = questionBankService.getById(questionBankId);
+            ThrowUtils.throwIf(questionBank==null,ErrorCode.NOT_FOUND_ERROR,"题库不存在");
         }
-    }*/
-
-    @Override
-    public void validQuestionBankQuestion(QuestionBankQuestion questionBankQuestion, boolean add) {
-
     }
 
     /**
@@ -118,6 +126,25 @@ public class QuestionBankQuestionServiceImpl extends ServiceImpl<QuestionBankQue
     @Override
     public Page<QuestionBankQuestionVO> getQuestionBankQuestionVOPage(Page<QuestionBankQuestion> questionBankQuestionPage, HttpServletRequest request) {
         return null;
+    }
+
+    @Override
+    public boolean removeById(QuestionBankQuestionRemoveRequest questionBankQuestionRemoveRequest) {
+        Long questionBankId = questionBankQuestionRemoveRequest.getQuestionBankId();
+        Long questionId = questionBankQuestionRemoveRequest.getQuestionId();
+        ThrowUtils.throwIf(questionBankId == null || questionId == null, ErrorCode.PARAMS_ERROR);
+        //  构造查询条件
+/*        LambdaQueryWrapper<QuestionBankQuestion> lambdaQueryWrapper = Wrappers.lambdaQuery(QuestionBankQuestion.class)
+                .eq(QuestionBankQuestion::getQuestionId, questionId)
+                .eq(QuestionBankQuestion::getQuestionBankId, questionBankId);
+        */
+
+        LambdaQueryWrapper<QuestionBankQuestion> lambdaQueryWrapper = new LambdaQueryWrapper<>(QuestionBankQuestion.class)
+                .eq(QuestionBankQuestion::getQuestionId, questionId)
+                .eq(QuestionBankQuestion::getQuestionBankId, questionBankId);
+        boolean result = this.remove(lambdaQueryWrapper);
+        ThrowUtils.throwIf(!result,ErrorCode.OPERATION_ERROR);
+        return true;
     }
 
 
